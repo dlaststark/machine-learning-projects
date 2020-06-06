@@ -36,12 +36,12 @@ def cnn_model(input_shape):
     x = ZeroPadding2D((2, 2))(x_input)
 
     # Convolution Layers
-    x = SeparableConv2D(filters=64, kernel_size=(5, 5), strides=(1, 1), 
+    x = SeparableConv2D(filters=32, kernel_size=(5, 5), strides=(1, 1), 
                padding='valid', kernel_initializer='he_normal', name='CONV-1A',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-1A')(x)
     x = Activation('selu')(x)
-    x = SeparableConv2D(filters=64, kernel_size=(5, 5), strides=(1, 1), 
+    x = SeparableConv2D(filters=32, kernel_size=(5, 5), strides=(1, 1), 
                padding='same', kernel_initializer='he_normal', name='CONV-1B',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-1B')(x)
@@ -49,17 +49,17 @@ def cnn_model(input_shape):
     x = MaxPooling2D(pool_size=(2, 2), name='MAXPOOL-1')(x)
     x = Dropout(rate=0.1, name='DROPOUT_CONV-1')(x)
     
-    x = SeparableConv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), 
+    x = SeparableConv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), 
                padding='same', kernel_initializer='he_normal', name='CONV-2A',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-2A')(x)
     x = Activation('selu')(x)
-    x = SeparableConv2D(filters=128, kernel_size=(3, 3), strides=(2, 2), 
+    x = SeparableConv2D(filters=64, kernel_size=(3, 3), strides=(2, 2), 
                padding='same', kernel_initializer='he_normal', name='CONV-2B',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-2B')(x)
     x = Activation('selu')(x)
-    x = SeparableConv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), 
+    x = SeparableConv2D(filters=256, kernel_size=(3, 3), strides=(1, 1), 
                padding='same', kernel_initializer='he_normal', name='CONV-2C',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-2C')(x)
@@ -67,17 +67,17 @@ def cnn_model(input_shape):
     x = MaxPooling2D(pool_size=(2, 2), name='MAXPOOL-2')(x)
     x = Dropout(rate=0.1, name='DROPOUT_CONV-2')(x)
 
-    x = SeparableConv2D(filters=256, kernel_size=(3, 3), strides=(1, 1), 
+    x = SeparableConv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), 
                padding='same', kernel_initializer='he_normal', name='CONV-3A',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-3A')(x)
     x = Activation('selu')(x)
-    x = SeparableConv2D(filters=256, kernel_size=(3, 3), strides=(2, 2), 
+    x = SeparableConv2D(filters=128, kernel_size=(3, 3), strides=(2, 2), 
                padding='same', kernel_initializer='he_normal', name='CONV-3B',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-3B')(x)
     x = Activation('selu')(x)
-    x = SeparableConv2D(filters=256, kernel_size=(3, 3), strides=(1, 1), 
+    x = SeparableConv2D(filters=512, kernel_size=(3, 3), strides=(1, 1), 
                padding='same', kernel_initializer='he_normal', name='CONV-3C',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-3C')(x)
@@ -85,17 +85,17 @@ def cnn_model(input_shape):
     x = MaxPooling2D(pool_size=(2, 2), name='MAXPOOL-3')(x)
     x = Dropout(rate=0.1, name='DROPOUT_CONV-3')(x)
 
-    x = SeparableConv2D(filters=512, kernel_size=(3, 3), strides=(1, 1), 
+    x = SeparableConv2D(filters=256, kernel_size=(3, 3), strides=(1, 1), 
                padding='same', kernel_initializer='he_normal', name='CONV-4A',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-4A')(x)
     x = Activation('selu')(x)
-    x = SeparableConv2D(filters=512, kernel_size=(3, 3), strides=(2, 2), 
+    x = SeparableConv2D(filters=256, kernel_size=(3, 3), strides=(2, 2), 
                padding='same', kernel_initializer='he_normal', name='CONV-4B',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-4B')(x)
     x = Activation('selu')(x)
-    x = SeparableConv2D(filters=512, kernel_size=(3, 3), strides=(1, 1), 
+    x = SeparableConv2D(filters=1024, kernel_size=(3, 3), strides=(1, 1), 
                padding='same', kernel_initializer='he_normal', name='CONV-4C',
                kernel_regularizer=l1_l2(l1=0.1, l2=0.1))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-4C')(x)
