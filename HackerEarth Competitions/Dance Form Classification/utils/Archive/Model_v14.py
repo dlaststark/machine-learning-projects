@@ -8,9 +8,9 @@ This script defines the machine learning model for image classification.
 """
 
 
-from tensorflow.keras.layers import Input, BatchNormalization, Dropout, Dense
-from tensorflow.keras.layers import ZeroPadding2D, MaxPooling2D, Conv2D, Add
-from tensorflow.keras.layers import Activation, SeparableConv2D, Flatten
+from tensorflow.keras.layers import Input, BatchNormalization, Dropout, Add
+from tensorflow.keras.layers import ZeroPadding2D, MaxPooling2D, Flatten
+from tensorflow.keras.layers import Activation, SeparableConv2D, Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l1_l2
 
@@ -52,24 +52,26 @@ def identity_block(x, f, filters, stage, block, dr=0.15, lr=0.005):
     x_shortcut = x
     
     # Main Path
-    x = Conv2D(filters=F1, kernel_size=(1, 1), padding='same', 
-               name=conv_name_base+'A', kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
+    x = SeparableConv2D(filters=F1, kernel_size=(f, f), padding='same', 
+                        name=conv_name_base+'A', depth_multiplier=3, 
+                        kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'A')(x)
     x = Activation('selu')(x)
     
     x = SeparableConv2D(filters=F2, kernel_size=(f, f), padding='same', 
-                        name=conv_name_base+'B', depth_multiplier=6, 
+                        name=conv_name_base+'B', depth_multiplier=3, 
                         kernel_initializer='he_normal', 
                         kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'B')(x)
     x = Activation('selu')(x)
     
-    x = Conv2D(filters=F3, kernel_size=(1, 1), padding='same', 
-               name=conv_name_base+'C', kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
+    x = SeparableConv2D(filters=F3, kernel_size=(f, f), padding='same', 
+                        name=conv_name_base+'C', depth_multiplier=3, 
+                        kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'C')(x)
-    x = Activation('linear')(x)
+    x = Activation('selu')(x)
     
     # Add shortcut value to main path
     x = Add()([x, x_shortcut])
@@ -121,32 +123,32 @@ def convolutional_block(x, f, filters, stage, block, s=2, p=2, dr=0.15, lr=0.005
     x_shortcut = x
 
     # Main Path
-    x = Conv2D(filters=F1, kernel_size=(1, 1), padding='same', 
-               name=conv_name_base+'A', kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
+    x = SeparableConv2D(filters=F1, kernel_size=(f, f), padding='same', 
+                        name=conv_name_base+'A', kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'A')(x)
     x = Activation('selu')(x)
 
     x = SeparableConv2D(filters=F2, kernel_size=(f, f), padding='same', 
-                        name=conv_name_base+'B', depth_multiplier=6, 
-                        kernel_initializer='he_normal', 
+                        name=conv_name_base+'B', kernel_initializer='he_normal', 
                         kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'B')(x)
     x = Activation('selu')(x)
     
-    x = Conv2D(filters=F3, kernel_size=(1, 1), padding='same', 
-               name=conv_name_base+'C', kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
+    x = SeparableConv2D(filters=F3, kernel_size=(f, f), padding='same', 
+                        name=conv_name_base+'C', kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'C')(x)
-    x = Activation('linear')(x)
+    x = Activation('selu')(x)
     x = MaxPooling2D(pool_size=(p, p), name=mp_name_base+'C')(x)
 
     # Shortcut Path
-    x_shortcut = Conv2D(filters=F3, kernel_size=(1, 1), padding='same', 
-                        name=conv_name_base+'S', kernel_initializer='he_normal',
-                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x_shortcut)
+    x_shortcut = SeparableConv2D(filters=F3, kernel_size=(f, f), 
+                                 padding='same', name=conv_name_base+'S',
+                                 kernel_initializer='he_normal',
+                                 kernel_regularizer=l1_l2(l1=lr, l2=lr))(x_shortcut)
     x_shortcut = BatchNormalization(axis=-1, name=bn_name_base+'S')(x_shortcut)
-    x_shortcut = Activation('linear')(x_shortcut)
+    x_shortcut = Activation('selu')(x_shortcut)
     x_shortcut = MaxPooling2D(pool_size=(p, p), name=mp_name_base+'S')(x_shortcut)
 
     # Add shortcut value to main path
@@ -178,14 +180,16 @@ def cnn_model(input_shape):
     x = ZeroPadding2D((2, 2))(x_input)
     
 	# Stage 1
-    x = Conv2D(filters=16, kernel_size=(3, 3), padding='valid', 
-               name='CONV-1A', kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
+    x = SeparableConv2D(filters=16, kernel_size=(5, 5), strides=(1, 1), 
+                        padding='valid', name='CONV-1A',
+                        kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-1A')(x)
     x = Activation('selu')(x)
-    x = Conv2D(filters=16, kernel_size=(3, 3), padding='same', 
-               name='CONV-1B', kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
+    x = SeparableConv2D(filters=16, kernel_size=(5, 5), strides=(1, 1), 
+                        padding='same', name='CONV-1B',
+                        kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-1B')(x)
     x = Activation('selu')(x)
     x = MaxPooling2D(pool_size=(2, 2), name='MAXPOOL-1')(x)
@@ -234,6 +238,12 @@ def cnn_model(input_shape):
     x = Activation('selu')(x)
     x = Dense(units=1024, name='FC-2', kernel_initializer='he_normal')(x)
     x = BatchNormalization(axis=-1, name='BN_FC-2')(x)
+    x = Activation('selu')(x)
+    x = Dense(units=512, name='FC-3', kernel_initializer='he_normal')(x)
+    x = BatchNormalization(axis=-1, name='BN_FC-3')(x)
+    x = Activation('selu')(x)
+    x = Dense(units=512, name='FC-4', kernel_initializer='he_normal')(x)
+    x = BatchNormalization(axis=-1, name='BN_FC-4')(x)
     x = Activation('selu')(x)
     x = Dense(units=8, name='OUTPUT', kernel_initializer='he_normal')(x)
     x = BatchNormalization(axis=-1, name='BN_FC-OUTPUT')(x)
