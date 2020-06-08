@@ -57,7 +57,7 @@ plt.show()
 
 
 # Create feature matrix for training images
-Xtrain = create_image_batch(train_true_label_df, train_img_path, 256)
+Xtrain = create_image_batch(train_true_label_df, train_img_path)
 print("\nXtrain shape: {}".format(Xtrain.shape))
 
 
@@ -76,7 +76,7 @@ print("\nSample data from prediction dataset:\n")
 print(prediction_df.head())
 
 # Create feature matrix for predict images
-Xpredict = create_image_batch(prediction_df, predict_img_path, 256)
+Xpredict = create_image_batch(prediction_df, predict_img_path)
 print("\nXpredict shape: {}".format(Xpredict.shape))
 
 

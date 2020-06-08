@@ -14,74 +14,7 @@ from tensorflow.keras.layers import GlobalMaxPooling2D, SeparableConv2D
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l1_l2
     
-
-def identity_block(x, f, filters, stage, block, dr=0.1, lr=0.005, dm=1):
-    """
-    Identity block implementation for ResNet model.
-
-    Parameters
-    ----------
-    x : NumPy matrix
-        Feature matrix for training data.
-    f : Integer
-        Kernel dimensions.
-    filters : List
-        List of filter dimensions.
-    stage : Integer
-        Stage# of ResNet model.
-    block : String
-        Block identifier of ResNet model.
-    dr : Float, optional
-        Dropout rate.
-    lr : Float, optional
-        L1/L2 regularization value.
-    dm : Integer, optional
-        Depth multiplier for Spatial Convolutions.
-
-    Returns
-    -------
-    x : NumPy matrix
-        Feature matrix after identity transformation.
-
-    """
     
-    conv_name_base = 'CONV-' + str(stage) + block + '-BRANCH-'
-    bn_name_base = 'BN_CONV-' + str(stage) + block + '-BRANCH-'
-    drop_name_base = 'DROPOUT-' + str(stage) + block + '-BRANCH-'
-    
-    F1, F2, F3 = filters
-    
-    x_shortcut = x
-    
-    # Main Path
-    x = SeparableConv2D(filters=F1, kernel_size=(1, 1), padding='same', 
-                        name=conv_name_base+'A', kernel_initializer='he_normal', 
-                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
-    x = BatchNormalization(axis=-1, name=bn_name_base+'A')(x)
-    x = Activation('selu')(x)
-    x = Dropout(rate=dr, name=drop_name_base+'A')(x)
-    
-    x = SeparableConv2D(filters=F2, kernel_size=(f, f), padding='same', 
-                        name=conv_name_base+'B', depth_multiplier=dm, 
-                        kernel_initializer='he_normal', 
-                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
-    x = BatchNormalization(axis=-1, name=bn_name_base+'B')(x)
-    x = Activation('selu')(x)
-    x = Dropout(rate=dr, name=drop_name_base+'B')(x)
-    
-    x = SeparableConv2D(filters=F3, kernel_size=(1, 1), padding='same', 
-                        name=conv_name_base+'C', kernel_initializer='he_normal', 
-                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
-    x = BatchNormalization(axis=-1, name=bn_name_base+'C')(x)
-    x = Dropout(rate=dr, name=drop_name_base+'C')(x)
-    
-    # Add shortcut value to main path
-    x = Add()([x, x_shortcut])
-    x = Activation('selu')(x)
-    
-    return x
-
-
 def magic_block(x, f, filters, stage, block, s=1, dr=0.1, lr=0.005, dm=1):
     """
     Block to expand or collapse the number of channels in incoming data stream
@@ -194,46 +127,52 @@ def cnn_model(input_shape):
     x = Dropout(rate=0.1, name='DROPOUT_CONV-1')(x)
     
     # Stage 2
-    x = magic_block(x, f=3, filters=[32, 32, 16], stage=2, block='A', s=1, dm=1)
-    x = magic_block(x, f=3, filters=[16, 16, 32], stage=2, block='B', s=2, dm=1)
-    x = identity_block(x, 3, [16, 16, 32], stage=2, block='C')
+    x = magic_block(x, f=3, filters=[32, 32, 16], stage=2, block='A', dm=1)
+    x = magic_block(x, f=3, filters=[16, 16, 32], stage=2, block='B', dm=1)
+    x = magic_block(x, f=3, filters=[32, 32, 16], stage=2, block='C', dm=1)
+    x = magic_block(x, f=3, filters=[16, 16, 32], stage=2, block='D', s=2, dm=1)
     
     # Stage 3
-    x = magic_block(x, f=3, filters=[64, 64, 32], stage=3, block='A', s=1, dm=2)
-    x = magic_block(x, f=3, filters=[32, 32, 64], stage=3, block='B', s=2, dm=2)
-    x = identity_block(x, 3, [32, 32, 64], stage=3, block='C')
+    x = magic_block(x, f=3, filters=[64, 64, 32], stage=3, block='A', dm=2)
+    x = magic_block(x, f=3, filters=[32, 32, 64], stage=3, block='B', dm=2)
+    x = magic_block(x, f=3, filters=[64, 64, 32], stage=3, block='C', dm=2)
+    x = magic_block(x, f=3, filters=[32, 32, 64], stage=3, block='D', s=2, dm=2)
     
     # Stage 4
-    x = magic_block(x, f=3, filters=[128, 128, 64], stage=4, block='A', s=1, dm=2)
-    x = magic_block(x, f=3, filters=[64, 64, 128], stage=4, block='B', s=2, dm=2)
-    x = identity_block(x, 3, [64, 64, 128], stage=4, block='C')
+    x = magic_block(x, f=3, filters=[128, 128, 64], stage=4, block='A', dm=2)
+    x = magic_block(x, f=3, filters=[64, 64, 128], stage=4, block='B', dm=2)
+    x = magic_block(x, f=3, filters=[128, 128, 64], stage=4, block='C', dm=2)
+    x = magic_block(x, f=3, filters=[64, 64, 128], stage=4, block='D', s=2, dm=2)
     
     # Stage 5
-    x = magic_block(x, f=3, filters=[256, 256, 128], stage=5, block='A', s=1, dm=4)
-    x = magic_block(x, f=3, filters=[128, 128, 256], stage=5, block='B', s=2, dm=4)
-    x = identity_block(x, 3, [128, 128, 256], stage=5, block='C')
+    x = magic_block(x, f=3, filters=[256, 256, 128], stage=5, block='A', dm=4)
+    x = magic_block(x, f=3, filters=[128, 128, 256], stage=5, block='B', dm=4)
+    x = magic_block(x, f=3, filters=[256, 256, 128], stage=5, block='C', dm=4)
+    x = magic_block(x, f=3, filters=[128, 128, 256], stage=5, block='D', s=2, dm=4)
     
     # Stage 6
-    x = magic_block(x, f=3, filters=[512, 512, 256], stage=6, block='A', s=1, dm=4)
-    x = magic_block(x, f=3, filters=[256, 256, 512], stage=6, block='B', s=2, dm=4)
-    x = identity_block(x, 3, [256, 256, 512], stage=6, block='C')
+    x = magic_block(x, f=3, filters=[512, 512, 256], stage=6, block='A', dm=4)
+    x = magic_block(x, f=3, filters=[256, 256, 512], stage=6, block='B', dm=4)
+    x = magic_block(x, f=3, filters=[512, 512, 256], stage=6, block='C', dm=4)
+    x = magic_block(x, f=3, filters=[256, 256, 512], stage=6, block='D', s=2, dm=4)
     
     # Stage 7
-    x = magic_block(x, f=3, filters=[1024, 1024, 512], stage=7, block='A', s=1, dm=6)
-    x = magic_block(x, f=3, filters=[512, 512, 1024], stage=7, block='B', s=2, dm=6)
-    x = identity_block(x, 3, [512, 512, 1024], stage=7, block='C')
+    x = magic_block(x, f=3, filters=[1024, 1024, 512], stage=7, block='A', dm=6)
+    x = magic_block(x, f=3, filters=[512, 512, 1024], stage=7, block='B', dm=6)
+    x = magic_block(x, f=3, filters=[1024, 1024, 512], stage=7, block='C', dm=6)
+    x = magic_block(x, f=3, filters=[512, 512, 1024], stage=7, block='D', s=2, dm=6)
     
     # Fully Connected Layers
     x = SeparableConv2D(filters=2048, kernel_size=(1, 1), padding='same', 
-                        name='FC-1', kernel_initializer='he_normal', 
-                        kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
+               name='FC-1', kernel_initializer='he_normal', 
+               kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
     x = BatchNormalization(axis=-1, name='BN_FC-1')(x)
     x = Activation('selu')(x)
     x = Dropout(rate=0.1, name='DROPOUT_FC-1')(x)
     
     x = SeparableConv2D(filters=2048, kernel_size=(1, 1), padding='same', 
-                        name='FC-2', kernel_initializer='he_normal', 
-                        kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
+               name='FC-2', kernel_initializer='he_normal', 
+               kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
     x = BatchNormalization(axis=-1, name='BN_FC-2')(x)
     x = Activation('selu')(x)
     x = Dropout(rate=0.1, name='DROPOUT_FC-2')(x)

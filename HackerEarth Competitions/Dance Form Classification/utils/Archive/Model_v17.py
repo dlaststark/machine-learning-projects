@@ -8,16 +8,16 @@ This script defines the machine learning model for image classification.
 """
 
 
-from tensorflow.keras.layers import Input, BatchNormalization, ZeroPadding2D
-from tensorflow.keras.layers import MaxPooling2D, Activation, Dropout, Add
-from tensorflow.keras.layers import GlobalMaxPooling2D, SeparableConv2D
+from tensorflow.keras.layers import Input, BatchNormalization, Dropout, Add
+from tensorflow.keras.layers import ZeroPadding2D, MaxPooling2D, Flatten
+from tensorflow.keras.layers import Activation, SeparableConv2D, Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l1_l2
-    
 
-def identity_block(x, f, filters, stage, block, dr=0.1, lr=0.005, dm=1):
+
+def reduction_block(x, f, filters, stage, block, dr=0.1, lr=0.005, dm=1):
     """
-    Identity block implementation for ResNet model.
+    Block to reduce the number of channels in incoming data stream
 
     Parameters
     ----------
@@ -28,9 +28,9 @@ def identity_block(x, f, filters, stage, block, dr=0.1, lr=0.005, dm=1):
     filters : List
         List of filter dimensions.
     stage : Integer
-        Stage# of ResNet model.
+        Stage# of model.
     block : String
-        Block identifier of ResNet model.
+        Block identifier of model.
     dr : Float, optional
         Dropout rate.
     lr : Float, optional
@@ -80,11 +80,11 @@ def identity_block(x, f, filters, stage, block, dr=0.1, lr=0.005, dm=1):
     x = Activation('selu')(x)
     
     return x
-
-
-def magic_block(x, f, filters, stage, block, s=1, dr=0.1, lr=0.005, dm=1):
+    
+    
+def expansion_block(x, f, filters, stage, block, s=2, dr=0.1, lr=0.005, dm=1):
     """
-    Block to expand or collapse the number of channels in incoming data stream
+    Block to expand the number of channels in incoming data stream
 
     Parameters
     ----------
@@ -194,55 +194,48 @@ def cnn_model(input_shape):
     x = Dropout(rate=0.1, name='DROPOUT_CONV-1')(x)
     
     # Stage 2
-    x = magic_block(x, f=3, filters=[32, 32, 16], stage=2, block='A', s=1, dm=1)
-    x = magic_block(x, f=3, filters=[16, 16, 32], stage=2, block='B', s=2, dm=1)
-    x = identity_block(x, 3, [16, 16, 32], stage=2, block='C')
+    x = reduction_block(x, f=3, filters=[32, 32, 16], stage=2, block='A', dm=1)
+    x = expansion_block(x, f=3, filters=[16, 16, 32], stage=2, block='B', dm=1)
     
     # Stage 3
-    x = magic_block(x, f=3, filters=[64, 64, 32], stage=3, block='A', s=1, dm=2)
-    x = magic_block(x, f=3, filters=[32, 32, 64], stage=3, block='B', s=2, dm=2)
-    x = identity_block(x, 3, [32, 32, 64], stage=3, block='C')
+    x = reduction_block(x, f=3, filters=[64, 64, 32], stage=3, block='A', dm=1)
+    x = expansion_block(x, f=3, filters=[32, 32, 64], stage=3, block='B', dm=1)
     
     # Stage 4
-    x = magic_block(x, f=3, filters=[128, 128, 64], stage=4, block='A', s=1, dm=2)
-    x = magic_block(x, f=3, filters=[64, 64, 128], stage=4, block='B', s=2, dm=2)
-    x = identity_block(x, 3, [64, 64, 128], stage=4, block='C')
+    x = reduction_block(x, f=3, filters=[128, 128, 64], stage=4, block='A', dm=1)
+    x = expansion_block(x, f=3, filters=[64, 64, 128], stage=4, block='B', dm=1)
     
     # Stage 5
-    x = magic_block(x, f=3, filters=[256, 256, 128], stage=5, block='A', s=1, dm=4)
-    x = magic_block(x, f=3, filters=[128, 128, 256], stage=5, block='B', s=2, dm=4)
-    x = identity_block(x, 3, [128, 128, 256], stage=5, block='C')
+    x = reduction_block(x, f=3, filters=[256, 256, 128], stage=5, block='A', dm=1)
+    x = expansion_block(x, f=3, filters=[128, 128, 256], stage=5, block='B', dm=1)
     
     # Stage 6
-    x = magic_block(x, f=3, filters=[512, 512, 256], stage=6, block='A', s=1, dm=4)
-    x = magic_block(x, f=3, filters=[256, 256, 512], stage=6, block='B', s=2, dm=4)
-    x = identity_block(x, 3, [256, 256, 512], stage=6, block='C')
+    x = reduction_block(x, f=3, filters=[512, 512, 256], stage=6, block='A', dm=1)
+    x = expansion_block(x, f=3, filters=[256, 256, 512], stage=6, block='B', dm=1)
     
     # Stage 7
-    x = magic_block(x, f=3, filters=[1024, 1024, 512], stage=7, block='A', s=1, dm=6)
-    x = magic_block(x, f=3, filters=[512, 512, 1024], stage=7, block='B', s=2, dm=6)
-    x = identity_block(x, 3, [512, 512, 1024], stage=7, block='C')
+    x = reduction_block(x, f=3, filters=[1024, 1024, 512], stage=7, block='A', dm=1)
+    x = expansion_block(x, f=3, filters=[512, 512, 1024], stage=7, block='B', dm=1)
     
     # Fully Connected Layers
-    x = SeparableConv2D(filters=2048, kernel_size=(1, 1), padding='same', 
-                        name='FC-1', kernel_initializer='he_normal', 
-                        kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
+    x = Flatten(name='FLATTEN')(x)
+    
+    x = Dense(units=1024, name='FC-1', 
+              kernel_initializer='he_normal',
+              kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
     x = BatchNormalization(axis=-1, name='BN_FC-1')(x)
     x = Activation('selu')(x)
-    x = Dropout(rate=0.1, name='DROPOUT_FC-1')(x)
+    x = Dropout(rate=0.2, name='DROPOUT_FC-1')(x)
     
-    x = SeparableConv2D(filters=2048, kernel_size=(1, 1), padding='same', 
-                        name='FC-2', kernel_initializer='he_normal', 
-                        kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
+    x = Dense(units=1024, name='FC-2', 
+              kernel_initializer='he_normal',
+              kernel_regularizer=l1_l2(l1=0.005, l2=0.005))(x)
     x = BatchNormalization(axis=-1, name='BN_FC-2')(x)
     x = Activation('selu')(x)
-    x = Dropout(rate=0.1, name='DROPOUT_FC-2')(x)
-
-    # Output Layer
-    x = SeparableConv2D(filters=8, kernel_size=(1, 1), padding='same', 
-                        name='OUTPUT', kernel_initializer='he_normal')(x)
-    x = BatchNormalization(axis=-1, name='BN_OUTPUT')(x)
-    x = GlobalMaxPooling2D(name='GLOBAL-MAXPOOL')(x)
+    x = Dropout(rate=0.2, name='DROPOUT_FC-2')(x)
+    
+    x = Dense(units=8, name='OUTPUT', kernel_initializer='he_normal')(x)
+    x = BatchNormalization(axis=-1, name='BN_FC-OUTPUT')(x)
     x = Activation('softmax')(x)
     
     # Create Keras Model instance
