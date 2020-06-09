@@ -34,6 +34,8 @@ ap.add_argument("-llr", "--min_lr", type=float, default=1e-5,
 	help="Min learning rate")
 ap.add_argument("-hlr", "--max_lr", type=float, default=1e-1,
 	help="Max learning rate")
+ap.add_argument("-c", "--checkpoint", required=True,
+	help="Full path for model checkpoint")
 ap.add_argument("-s", "--start_epoch", type=int, default=0,
 	help="Epoch to restart training at")
 args = vars(ap.parse_args())
@@ -44,6 +46,7 @@ max_iterations = args["max_iterations"]
 mini_batch_size = args["mini_batch_size"]
 min_lr = args["min_lr"]
 max_lr = args["max_lr"]
+checkpoint = args["checkpoint"]
 start_epoch = args["start_epoch"]
 
 
@@ -57,11 +60,11 @@ Ytest_oh = dataset['Ytest_oh']
 
 # Configure data augmentation
 datagen = ImageDataGenerator(
-    #rotation_range=20,
-    #zoom_range=0.15,
+    rotation_range=20,
+    zoom_range=0.15,
+    shear_range=0.15,
     width_shift_range=0.2,
     height_shift_range=0.2,
-    #shear_range=0.15,
     horizontal_flip=True,
     fill_mode="nearest")
 
@@ -87,7 +90,8 @@ clr = CyclicLR(base_lr=min_lr, max_lr=max_lr,
 
 # Configure set of callbacks
 callbacks = [
-    TrainingMonitor(plotPathLoss, plotPathMetric, jsonPath=jsonPath, startAt=start_epoch),
+    TrainingMonitor(plotPathLoss, plotPathMetric, 
+                    jsonPath=jsonPath, startAt=start_epoch),
     clr
 ]
 
@@ -114,3 +118,7 @@ plt.title("Cyclical Learning Rate (CLR)")
 plt.grid()
 plt.savefig(out_img_path+"Model_LR_Schedule.png", dpi=300, bbox_inches='tight')
 plt.show()
+
+
+# Save the model
+model.save(checkpoint + 'Dance_Form_Classifier_Model.hdf5', overwrite=True)
