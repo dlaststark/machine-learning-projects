@@ -107,7 +107,7 @@ model.fit_generator(
 
 # Get score values on test dataset
 scores = model.evaluate(x=Xtest, y=Ytest_oh, verbose=0)
-print("\n\nTest Loss: {} \nTest Accuracy: {}".format(scores[0], scores[1]))
+print("\n\nTest Loss: {} \nTest Accuracy: {}\n\n".format(scores[0], scores[1]))
 
 
 # Plot learning rate schedule

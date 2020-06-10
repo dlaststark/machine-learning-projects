@@ -203,18 +203,24 @@ def cnn_model(input_shape):
     # Stage 2
     x = magic_block(x, f=3, filters=[256, 128, 128], stage=2, block='A', dm=[6, 4, 2])
     x = identity_block(x, 3, [256, 128, 128], stage=2, block='B', dm=[6, 4, 2])
+    x = identity_block(x, 3, [256, 128, 128], stage=2, block='C', dm=[6, 4, 2])
     
     # Stage 3
     x = magic_block(x, f=3, filters=[128, 256, 256], stage=3, block='A', dm=[2, 4, 6])
     x = identity_block(x, 3, [128, 256, 256], stage=3, block='B', dm=[2, 4, 6])
+    x = identity_block(x, 3, [128, 256, 256], stage=3, block='C', dm=[2, 4, 6])
     
     # Stage 4
     x = magic_block(x, f=3, filters=[1024, 512, 512], stage=4, block='A', dm=[6, 4, 2])
     x = identity_block(x, 3, [1024, 512, 512], stage=4, block='B', dm=[6, 4, 2])
+    x = identity_block(x, 3, [1024, 512, 512], stage=4, block='C', dm=[6, 4, 2])
+    x = identity_block(x, 3, [1024, 512, 512], stage=4, block='D', dm=[6, 4, 2])
     
     # Stage 5
     x = magic_block(x, f=3, filters=[512, 1024, 1024], stage=5, block='A', dm=[2, 4, 6])
     x = identity_block(x, 3, [512, 1024, 1024], stage=5, block='B', dm=[2, 4, 6])
+    x = identity_block(x, 3, [512, 1024, 1024], stage=5, block='C', dm=[2, 4, 6])
+    x = identity_block(x, 3, [512, 1024, 1024], stage=5, block='D', dm=[2, 4, 6])
     
     # Stage 6
     x = SeparableConv2D(filters=4096, kernel_size=(3, 3), padding='valid', 
