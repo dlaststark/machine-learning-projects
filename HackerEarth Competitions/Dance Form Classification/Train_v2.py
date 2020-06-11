@@ -61,8 +61,8 @@ Ytest_oh = dataset['Ytest_oh']
 # Configure data augmentation
 datagen = ImageDataGenerator(
     rotation_range=20,
-    zoom_range=0.15,
-    shear_range=0.15,
+    #zoom_range=0.15,
+    #shear_range=0.15,
     width_shift_range=0.2,
     height_shift_range=0.2,
     horizontal_flip=True,

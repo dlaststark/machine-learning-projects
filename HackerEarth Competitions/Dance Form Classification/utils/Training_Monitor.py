@@ -119,7 +119,7 @@ class TrainingMonitor(BaseLogger):
             plt.plot(N, self.H["val_accuracy"], label="val_accuracy")
             plt.title("Training Accuracy [Epoch {}]".format(len(self.H["accuracy"])))
             plt.xlabel("Epoch #")
-            plt.ylabel("AUC")
+            plt.ylabel("Accuracy")
             plt.legend()
             plt.grid()
             plt.savefig(self.figPathMetric)
