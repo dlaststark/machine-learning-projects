@@ -15,7 +15,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l1_l2
 
 
-def identity_block(x, f, filters, stage, block, dm=[1, 1, 1], dr=0.1, lr=0.0001):
+def identity_block(x, f, filters, stage, block, dm=1, dr=0.1, lr=0.0001):
     """
     Identity block implementation for ResNet model.
 
@@ -31,8 +31,8 @@ def identity_block(x, f, filters, stage, block, dm=[1, 1, 1], dr=0.1, lr=0.0001)
         Stage# of ResNet model.
     block : String
         Block identifier of ResNet model.
-    dm : List, optional
-        List of depth multipliers for Spatial Convolutions.
+    dm : Integer, optional
+        Depth multiplier for Spatial Convolutions.
     dr : Float, optional
         Dropout rate.
     lr : Float, optional
@@ -50,40 +50,37 @@ def identity_block(x, f, filters, stage, block, dm=[1, 1, 1], dr=0.1, lr=0.0001)
     drop_name_base = 'DROPOUT-' + str(stage) + block + '-BRANCH-'
     
     F1, F2, F3 = filters
-    dm1, dm2, dm3 = dm
     
     x_shortcut = x
     
     # Main Path
     x = SeparableConv2D(filters=F1, kernel_size=(1, 1), padding='same', 
-               name=conv_name_base+'A', depth_multiplier=dm1, 
-               kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
+                        name=conv_name_base+'A', kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'A')(x)
     x = Activation('selu')(x)
     
     x = SeparableConv2D(filters=F2, kernel_size=(f, f), padding='same', 
-               name=conv_name_base+'B', depth_multiplier=dm2, 
-               kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
+                        name=conv_name_base+'B', depth_multiplier=dm, 
+                        kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'B')(x)
     x = Activation('selu')(x)
     
     x = SeparableConv2D(filters=F3, kernel_size=(1, 1), padding='same', 
-               name=conv_name_base+'C', depth_multiplier=dm3, 
-               kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
+                        name=conv_name_base+'C', kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'C')(x)
-    x = Activation('selu')(x)
-    x = Dropout(rate=dr, name=drop_name_base+'C')(x)
     
     # Add shortcut value to main path
     x = Add()([x, x_shortcut])
+    x = Activation('selu')(x)
+    x = Dropout(rate=dr, name=drop_name_base+'S')(x)
     
     return x
 
 
-def convolution_block(x, f, filters, stage, block, dm=[1, 1, 1], s=2, dr=0.1, lr=0.0001):
+def convolution_block(x, f, filters, stage, block, dm=1, s=2, dr=0.1, lr=0.0001):
     """
     Block to expand or collapse the number of channels in incoming data stream
 
@@ -99,8 +96,8 @@ def convolution_block(x, f, filters, stage, block, dm=[1, 1, 1], s=2, dr=0.1, lr
         Stage# of model.
     block : String
         Block identifier of model.
-    dm : List, optional
-        List of depth multipliers for Spatial Convolutions.
+    dm : Integer, optional
+        Depth multiplier for Spatial Convolutions.
     s : Integer, optional
         Stride dimensions. The default is 2.
     dr : Float, optional
@@ -120,50 +117,39 @@ def convolution_block(x, f, filters, stage, block, dm=[1, 1, 1], s=2, dr=0.1, lr
     drop_name_base = 'DROPOUT-' + str(stage) + block + '-BRANCH-'
     
     F1, F2, F3 = filters
-    dm1, dm2, dm3 = dm
     
     x_shortcut = x
 
     # Main Path
     x = SeparableConv2D(filters=F1, kernel_size=(1, 1), padding='same', 
-               name=conv_name_base+'A', depth_multiplier=dm1,
-               kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
+                        name=conv_name_base+'A', kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'A')(x)
     x = Activation('selu')(x)
 
     x = SeparableConv2D(filters=F2, kernel_size=(f, f), padding='same', 
-               name=conv_name_base+'B', strides=(s, s),
-               kernel_initializer='he_normal', depth_multiplier=dm2,
-               kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
+                        name=conv_name_base+'B', strides=(s, s),
+                        kernel_initializer='he_normal', depth_multiplier=dm,
+                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'B')(x)
     x = Activation('selu')(x)
     
     x = SeparableConv2D(filters=F3, kernel_size=(1, 1), padding='same', 
-               name=conv_name_base+'C', depth_multiplier=dm3,
-               kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
+                        name=conv_name_base+'C', kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x)
     x = BatchNormalization(axis=-1, name=bn_name_base+'C')(x)
-    x = Activation('selu')(x)
-    x = Dropout(rate=dr, name=drop_name_base+'C')(x)
 
     # Shortcut Path
-    x_shortcut = SeparableConv2D(filters=F3, kernel_size=(f, f), padding='same', 
-                        name=conv_name_base+'S1', depth_multiplier=dm3,
-                        kernel_initializer='he_normal', 
-                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x_shortcut)
-    x_shortcut = BatchNormalization(axis=-1, name=bn_name_base+'S1')(x_shortcut)
-    x_shortcut = Activation('selu')(x_shortcut)
-    x_shortcut = SeparableConv2D(filters=F3, kernel_size=(1, 1), padding='same', 
-                        name=conv_name_base+'S2', strides=(s, s),
-                        kernel_initializer='he_normal', depth_multiplier=dm3,
-                        kernel_regularizer=l1_l2(l1=lr, l2=lr))(x_shortcut)
-    x_shortcut = BatchNormalization(axis=-1, name=bn_name_base+'S2')(x_shortcut)
-    x_shortcut = Activation('selu')(x_shortcut)
-    x_shortcut = Dropout(rate=dr, name=drop_name_base+'S')(x_shortcut)
+    x_shortcut = SeparableConv2D(filters=F3, kernel_size=(1, 1), 
+                                 name=conv_name_base+'S', padding='same', 
+                                 kernel_initializer='he_normal', strides=(s, s),
+                                 kernel_regularizer=l1_l2(l1=lr, l2=lr))(x_shortcut)
+    x_shortcut = BatchNormalization(axis=-1, name=bn_name_base+'S')(x_shortcut)
 
     # Add shortcut value to main path
     x = Add()([x, x_shortcut])
+    x = Activation('selu')(x)
+    x = Dropout(rate=dr, name=drop_name_base+'S')(x)
     
     return x
 
@@ -190,65 +176,73 @@ def cnn_model(input_shape):
     
     # Stage 1
     x = SeparableConv2D(filters=64, kernel_size=(5, 5), padding='valid', 
-               name='CONV-1A', kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=0.0001, l2=0.0001))(x)
+                        name='CONV-1A', kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=0.0001, l2=0.0001))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-1A')(x)
     x = Activation('selu')(x)
     x = SeparableConv2D(filters=64, kernel_size=(5, 5), padding='same', 
-               name='CONV-1B', strides=(2, 2), kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=0.0001, l2=0.0001))(x)
+                        name='CONV-1B', strides=(2, 2), 
+                        kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=0.0001, l2=0.0001))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-1B')(x)
     x = Activation('selu')(x)
     x = MaxPooling2D(pool_size=(2, 2), name='MAXPOOL-1')(x)
     x = Dropout(rate=0.1, name='DROPOUT_CONV-1')(x)
     
     # Stage 2
-    x = convolution_block(x, f=3, filters=[64, 64, 256], stage=2, block='A')
-    x = identity_block(x, 3, [64, 64, 256], stage=2, block='B')
-    x = identity_block(x, 3, [64, 64, 256], stage=2, block='C')
-    x = identity_block(x, 3, [64, 64, 256], stage=2, block='D')
+    x = convolution_block(x, f=3, filters=[256, 64, 64], stage=2, block='A', dm=4)
+    x = identity_block(x, 3, [256, 64, 64], stage=2, block='B', dm=4)
+    x = identity_block(x, 3, [256, 64, 64], stage=2, block='C', dm=4)
+    x = identity_block(x, 3, [256, 64, 64], stage=2, block='D', dm=4)
+    x = identity_block(x, 3, [256, 64, 64], stage=2, block='E', dm=4)
     
     # Stage 3
-    x = convolution_block(x, f=3, filters=[128, 128, 512], stage=3, block='A')
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='B')
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='C')
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='D')
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='E')
+    x = convolution_block(x, f=3, filters=[512, 128, 128], stage=3, block='A', dm=4)
+    x = identity_block(x, 3, [512, 128, 128], stage=3, block='B', dm=4)
+    x = identity_block(x, 3, [512, 128, 128], stage=3, block='C', dm=4)
+    x = identity_block(x, 3, [512, 128, 128], stage=3, block='D', dm=4)
+    x = identity_block(x, 3, [512, 128, 128], stage=3, block='E', dm=4)
+    x = identity_block(x, 3, [512, 128, 128], stage=3, block='F', dm=4)
     
     # Stage 4
-    x = convolution_block(x, f=3, filters=[256, 256, 1024], stage=4, block='A')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='B')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='C')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='D')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='E')
+    x = convolution_block(x, f=3, filters=[1024, 256, 256], stage=4, block='A', dm=4)
+    x = identity_block(x, 3, [1024, 256, 256], stage=4, block='B', dm=4)
+    x = identity_block(x, 3, [1024, 256, 256], stage=4, block='C', dm=4)
+    x = identity_block(x, 3, [1024, 256, 256], stage=4, block='D', dm=4)
+    x = identity_block(x, 3, [1024, 256, 256], stage=4, block='E', dm=4)
+    x = identity_block(x, 3, [1024, 256, 256], stage=4, block='F', dm=4)
     
     # Stage 5
-    x = convolution_block(x, f=3, filters=[512, 512, 2048], stage=5, block='A')
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='B')
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='C')
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='D')
+    x = convolution_block(x, f=3, filters=[2048, 512, 512], stage=5, block='A', dm=4)
+    x = identity_block(x, 3, [2048, 512, 512], stage=5, block='B', dm=4)
+    x = identity_block(x, 3, [2048, 512, 512], stage=5, block='C', dm=4)
+    x = identity_block(x, 3, [2048, 512, 512], stage=5, block='D', dm=4)
+    x = identity_block(x, 3, [2048, 512, 512], stage=5, block='E', dm=4)
     
     # Stage 6
-    x = SeparableConv2D(filters=4096, kernel_size=(1, 1), padding='same', 
-               name='CONV-6', kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=0.0001, l2=0.0001))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-6')(x)
-    x = Activation('selu')(x)
     x = MaxPooling2D(pool_size=(2,2), name='MAXPOOL-6')(x)
-    x = Dropout(rate=0.1, name='DROPOUT_CONV-6')(x)
     
     # Stage 7
-    x = SeparableConv2D(filters=8192, kernel_size=(1, 1), padding='same', 
-               name='CONV-7', kernel_initializer='he_normal', 
-               kernel_regularizer=l1_l2(l1=0.0001, l2=0.0001))(x)
+    x = SeparableConv2D(filters=4096, kernel_size=(1, 1), padding='same', 
+                        name='CONV-7', kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=0.0001, l2=0.0001))(x)
     x = BatchNormalization(axis=-1, name='BN_CONV-7')(x)
     x = Activation('selu')(x)
     x = MaxPooling2D(pool_size=(2,2), name='MAXPOOL-7')(x)
     x = Dropout(rate=0.1, name='DROPOUT_CONV-7')(x)
     
+    # Stage 8
+    x = SeparableConv2D(filters=8192, kernel_size=(1, 1), padding='same', 
+                        name='CONV-8', kernel_initializer='he_normal', 
+                        kernel_regularizer=l1_l2(l1=0.0001, l2=0.0001))(x)
+    x = BatchNormalization(axis=-1, name='BN_CONV-8')(x)
+    x = Activation('selu')(x)
+    x = Dropout(rate=0.1, name='DROPOUT_CONV-8')(x)
+    
     # Output Layer
     x = SeparableConv2D(filters=8, kernel_size=(1, 1), padding='same', 
-               name='OUTPUT', kernel_initializer='he_normal')(x)
+                        name='OUTPUT', kernel_initializer='he_normal')(x)
     x = BatchNormalization(axis=-1, name='BN_OUTPUT')(x)
     x = GlobalMaxPooling2D(name='GLOBAL-MAXPOOL')(x)
     x = Activation('softmax')(x)
