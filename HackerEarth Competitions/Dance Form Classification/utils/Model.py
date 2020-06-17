@@ -190,34 +190,31 @@ def cnn_model(input_shape):
     x = Dropout(rate=0.1, name='DROPOUT_CONV-1')(x)
     
     # Stage 2
-    x = convolution_block(x, f=3, filters=[256, 64, 64], stage=2, block='A', dm=4)
-    x = identity_block(x, 3, [256, 64, 64], stage=2, block='B', dm=4)
-    x = identity_block(x, 3, [256, 64, 64], stage=2, block='C', dm=4)
-    x = identity_block(x, 3, [256, 64, 64], stage=2, block='D', dm=4)
-    x = identity_block(x, 3, [256, 64, 64], stage=2, block='E', dm=4)
+    x = convolution_block(x, f=3, filters=[64, 64, 256], stage=2, block='A', dm=4)
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='B', dm=4)
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='C', dm=4)
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='D', dm=4)
     
     # Stage 3
-    x = convolution_block(x, f=3, filters=[512, 128, 128], stage=3, block='A', dm=4)
-    x = identity_block(x, 3, [512, 128, 128], stage=3, block='B', dm=4)
-    x = identity_block(x, 3, [512, 128, 128], stage=3, block='C', dm=4)
-    x = identity_block(x, 3, [512, 128, 128], stage=3, block='D', dm=4)
-    x = identity_block(x, 3, [512, 128, 128], stage=3, block='E', dm=4)
-    x = identity_block(x, 3, [512, 128, 128], stage=3, block='F', dm=4)
+    x = convolution_block(x, f=3, filters=[128, 128, 512], stage=3, block='A', dm=4)
+    x = identity_block(x, 3, [128, 128, 512], stage=3, block='B', dm=4)
+    x = identity_block(x, 3, [128, 128, 512], stage=3, block='C', dm=4)
+    x = identity_block(x, 3, [128, 128, 512], stage=3, block='D', dm=4)
+    x = identity_block(x, 3, [128, 128, 512], stage=3, block='E', dm=4)
     
     # Stage 4
-    x = convolution_block(x, f=3, filters=[1024, 256, 256], stage=4, block='A', dm=4)
-    x = identity_block(x, 3, [1024, 256, 256], stage=4, block='B', dm=4)
-    x = identity_block(x, 3, [1024, 256, 256], stage=4, block='C', dm=4)
-    x = identity_block(x, 3, [1024, 256, 256], stage=4, block='D', dm=4)
-    x = identity_block(x, 3, [1024, 256, 256], stage=4, block='E', dm=4)
-    x = identity_block(x, 3, [1024, 256, 256], stage=4, block='F', dm=4)
+    x = convolution_block(x, f=3, filters=[256, 256, 1024], stage=4, block='A', dm=4)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='B', dm=4)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='C', dm=4)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='D', dm=4)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='E', dm=4)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='F', dm=4)
     
     # Stage 5
-    x = convolution_block(x, f=3, filters=[2048, 512, 512], stage=5, block='A', dm=4)
-    x = identity_block(x, 3, [2048, 512, 512], stage=5, block='B', dm=4)
-    x = identity_block(x, 3, [2048, 512, 512], stage=5, block='C', dm=4)
-    x = identity_block(x, 3, [2048, 512, 512], stage=5, block='D', dm=4)
-    x = identity_block(x, 3, [2048, 512, 512], stage=5, block='E', dm=4)
+    x = convolution_block(x, f=3, filters=[512, 512, 2048], stage=5, block='A', dm=4)
+    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='B', dm=4)
+    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='C', dm=4)
+    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='D', dm=4)
     
     # Stage 6
     x = BatchNormalization(axis=-1, name='BN_CONV-6')(x)
