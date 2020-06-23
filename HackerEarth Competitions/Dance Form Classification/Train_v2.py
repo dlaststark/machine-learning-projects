@@ -12,7 +12,7 @@ predictions on test dataset.
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from tensorflow.keras.metrics import CategoricalAccuracy
+from tensorflow.keras.metrics import CategoricalAccuracy, Precision, Recall
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.optimizers import Adam
@@ -61,8 +61,8 @@ Ytest_oh = dataset['Ytest_oh']
 # Configure data augmentation
 datagen = ImageDataGenerator(
     rotation_range=20,
-    #zoom_range=0.15,
-    #shear_range=0.15,
+    zoom_range=0.15,
+    shear_range=0.15,
     width_shift_range=0.2,
     height_shift_range=0.2,
     vertical_flip=True,
@@ -76,21 +76,22 @@ model = cnn_model(img_shape)
 print("\n\nModel Summary:\n")
 print(model.summary())
 
-model.compile(loss=CategoricalCrossentropy(name='categorical_crossentropy'), 
-              optimizer=Adam(lr=min_lr), 
-              metrics=[CategoricalAccuracy(name='accuracy')])
+model.compile(loss=CategoricalCrossentropy(name='categorical_crossentropy'),
+              optimizer=Adam(lr=min_lr),
+              metrics=[CategoricalAccuracy(name='accuracy'),
+			  		   Precision(name='precision'), Recall(name='recall')])
 
 
 # Configure the learning rate schedule
 clr_method = 'triangular2'
 step_size = 4 * (Xtrain.shape[0] // mini_batch_size)
-clr = CyclicLR(base_lr=min_lr, max_lr=max_lr, 
+clr = CyclicLR(base_lr=min_lr, max_lr=max_lr,
                mode=clr_method, step_size=step_size)
 
 
 # Configure set of callbacks
 callbacks = [
-    TrainingMonitor(plotPathLoss, plotPathMetric, 
+    TrainingMonitor(plotPathLoss, plotPathMetric,
                     jsonPath=jsonPath, startAt=start_epoch),
     clr
 ]

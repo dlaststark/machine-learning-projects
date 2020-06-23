@@ -51,13 +51,14 @@ sns.countplot(x="target_enc", data=train_true_label_df)
 plt.xlabel("Target Class")
 plt.ylabel("Count")
 plt.title("Countplot of different classes in training data")
-plt.savefig(out_img_path+'train_labels_countplot.png', 
+plt.savefig(out_img_path+'train_labels_countplot.png',
             dpi=300, bbox_inches='tight')
 plt.show()
 
 
 # Create feature matrix for training images
 Xtrain = create_image_batch(train_true_label_df, train_img_path)
+Xtrain = np.array(Xtrain, dtype="float") / 255.0
 print("\nXtrain shape: {}".format(Xtrain.shape))
 
 
@@ -77,6 +78,7 @@ print(prediction_df.head())
 
 # Create feature matrix for predict images
 Xpredict = create_image_batch(prediction_df, predict_img_path)
+Xpredict = np.array(Xpredict, dtype="float") / 255.0
 print("\nXpredict shape: {}".format(Xpredict.shape))
 
 
@@ -89,7 +91,7 @@ Xtrain_full = Xtrain.copy()
 Ytrain_full = Ytrain.copy()
 
 # Stratified splitting of training data
-sss = StratifiedShuffleSplit(n_splits=1, test_size=0.085, random_state=1)
+sss = StratifiedShuffleSplit(n_splits=1, test_size=0.12, random_state=1)
 for train_index, test_index in sss.split(Xtrain, Ytrain):
     train_x, test_x = Xtrain[train_index], Xtrain[test_index]
     train_y, test_y = Ytrain[train_index], Ytrain[test_index]
@@ -121,10 +123,10 @@ print("Ytrain_full_oh shape: {}".format(Ytrain_full_oh.shape))
 '''
 
 np.savez_compressed(out_npz_file,
-                    Xtrain_full=Xtrain_full, Ytrain_full=Ytrain_full, 
-                    Ytrain_full_oh=Ytrain_full_oh, 
-                    Xtrain=train_x, Ytrain=train_y, Ytrain_oh=train_y_oh, 
-                    Xtest=test_x, Ytest=test_y, Ytest_oh=test_y_oh, 
+                    Xtrain_full=Xtrain_full, Ytrain_full=Ytrain_full,
+                    Ytrain_full_oh=Ytrain_full_oh,
+                    Xtrain=train_x, Ytrain=train_y, Ytrain_oh=train_y_oh,
+                    Xtest=test_x, Ytest=test_y, Ytest_oh=test_y_oh,
                     Xpredict=Xpredict)
 
 print("\n\nData saved in NPZ file.")

@@ -10,6 +10,7 @@ This script prepares an image batch object containing data of input images.
 
 import cv2
 import numpy as np
+from tensorflow.keras.preprocessing.image import img_to_array
 
 
 def create_image_batch(df, img_path, thres=224):
@@ -33,7 +34,7 @@ def create_image_batch(df, img_path, thres=224):
     '''
 
     image_group = []
-    
+
     for idx, file in enumerate(df['Image']):
 
         # Set file path for input image
@@ -46,18 +47,14 @@ def create_image_batch(df, img_path, thres=224):
         # Scale the input image
         (h, w, _) = img.shape
         if (h > thres) or (w > thres):
-            img = cv2.resize(img, (thres, thres), 
+            img = cv2.resize(img, (thres, thres),
                              interpolation = cv2.INTER_NEAREST)
 
-        # Normalize the input image
-        normalized_img = img.flatten()
-        normalized_img = normalized_img / 255.
-        img = normalized_img.reshape(img.shape[0], img.shape[1], 3)
-
+        img = img_to_array(img)
         image_group.append(img)
 
     # Get the max image shape
-    max_shape = tuple(max(image.shape[x] for image in image_group) 
+    max_shape = tuple(max(image.shape[x] for image in image_group)
                       for x in range(3))
 
     # Construct an image batch object
@@ -65,7 +62,7 @@ def create_image_batch(df, img_path, thres=224):
 
     # Copy all images to the upper left part of the image batch object
     for image_index, image in enumerate(image_group):
-        image_batch[image_index, 
+        image_batch[image_index,
                     :image.shape[0], :image.shape[1], :image.shape[2]] = image
-    
+
     return image_batch

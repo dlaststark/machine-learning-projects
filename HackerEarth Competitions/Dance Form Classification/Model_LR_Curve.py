@@ -29,7 +29,7 @@ Ytrain_oh = dataset['Ytrain_oh']
 mini_batch_size = 32
 img_shape = (Xtrain.shape[1], Xtrain.shape[2], Xtrain.shape[3])
 model = cnn_model(img_shape)
-model.compile(loss=categorical_crossentropy, optimizer=Adam(), 
+model.compile(loss=categorical_crossentropy, optimizer=Adam(),
               metrics=[CategoricalAccuracy(name='accuracy')])
 print("\nModel Summary:\n")
 print(model.summary())
@@ -38,7 +38,7 @@ print(model.summary())
 # Plot learning rate curve
 lrf = LearningRateFinder(model)
 lrf.find((Xtrain, Ytrain_oh),
-         startLR=1e-10, endLR=1e-0,
+         startLR=1e-10, endLR=1e-1,
          stepsPerEpoch=np.ceil((len(Xtrain) / float(mini_batch_size))),
          batchSize=mini_batch_size, sampleSize=512)
 lrf.plot_loss(title="Learning Rate curve of Dance Form classifier")
