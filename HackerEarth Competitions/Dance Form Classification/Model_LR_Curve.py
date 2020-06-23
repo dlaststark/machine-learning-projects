@@ -38,7 +38,7 @@ print(model.summary())
 # Plot learning rate curve
 lrf = LearningRateFinder(model)
 lrf.find((Xtrain, Ytrain_oh),
-         startLR=1e-10, endLR=1e-1,
+         startLR=1e-10, endLR=1e-0,
          stepsPerEpoch=np.ceil((len(Xtrain) / float(mini_batch_size))),
          batchSize=mini_batch_size, sampleSize=512)
 lrf.plot_loss(title="Learning Rate curve of Dance Form classifier")
