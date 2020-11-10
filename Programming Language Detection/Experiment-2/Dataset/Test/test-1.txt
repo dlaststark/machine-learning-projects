@@ -1,0 +1,11 @@
+// This ia a sample getter function
+
+private int LOC = 0;
+
+public int getLOC() {
+	return LOC;
+}
+
+public void setLOC(int lOC) {
+	LOC = lOC;
+}
