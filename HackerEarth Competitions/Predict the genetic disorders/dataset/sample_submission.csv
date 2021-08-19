@@ -1,0 +1,6 @@
+Patient Id,Genetic Disorder,Disorder Subclass
+PID0x6418,Mitochondrial genetic inheritance disorders,Leber's hereditary optic neuropathy
+PID0x25d5,Single-gene inheritance diseases,Cystic fibrosis
+PID0x4a82,Multifactorial genetic inheritance disorders,Diabetes
+PID0x4ac8,Mitochondrial genetic inheritance disorders,Leigh syndrome
+PID0x1bf7,Multifactorial genetic inheritance disorders,Cancer
